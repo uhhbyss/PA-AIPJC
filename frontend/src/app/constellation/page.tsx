@@ -3,10 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { db } from '@/lib/db';
 import { UMAP } from 'umap-js';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 
-// Recharts components remain the same
+// Recharts components
 import {
     ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
@@ -23,7 +22,7 @@ interface ChartDataPoint {
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
-        const entryDate = new Date(data.date).toLocaleDateString(); // Get the date
+        const entryDate = new Date(data.date).toLocaleDateString();
 
         return (
             <div className="p-3 bg-gray-800 border border-gray-600 rounded-md shadow-lg max-w-xs w-64">
@@ -31,26 +30,35 @@ const CustomTooltip = ({ active, payload }: any) => {
                 <p className="text-gray-300 text-sm mb-3">
                     {data.content.substring(0, 150)}...
                 </p>
-                <Link
-                    href={`/entry/${data.id}`}
-                    className="text-center block w-full text-sm text-blue-400 hover:underline"
-                >
-                    View or Edit Entry &rarr;
-                </Link>
+                {/* Note: This link is part of a non-working feature from the history. 
+            If the /entry/[id] page exists, this will work. */}
+                <a href={`/entry/${data.id}`} className="text-center block w-full text-sm text-blue-400 hover:underline">
+                    View Entry &rarr;
+                </a>
             </div>
         );
     }
     return null;
 };
 
+// A simple seeded PRNG to make the UMAP layout deterministic
+const seededRandom = () => {
+    let seed = 12345;
+    return () => {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+    };
+};
+
 const ConstellationPage = () => {
-    const router = useRouter();
-
-
     const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [progressText, setProgressText] = useState('Initializing...');
+
+    // --- CORRECTED STATE ---
+    const [progress, setProgress] = useState({ text: 'Initializing...', percentage: 0 });
+
     const processingRef = useRef(false);
+    const router = useRouter();
 
     useEffect(() => {
         if (processingRef.current) return;
@@ -58,16 +66,15 @@ const ConstellationPage = () => {
 
         const generateConstellation = async () => {
             try {
-                setProgressText('Fetching journal entries...');
+                setProgress({ text: 'Fetching journal entries...', percentage: 10 });
                 const entries = await db.entries.toArray();
                 if (entries.length < 5) {
-                    setProgressText(`Not enough entries. You need at least 5. You have ${entries.length}.`);
+                    setProgress({ text: `Not enough entries. You need at least 5. You have ${entries.length}.`, percentage: 100 });
                     setIsLoading(false);
                     return;
                 }
 
-                // Send entries to the backend for AI processing
-                setProgressText('Analyzing entries with backend AI...');
+                setProgress({ text: 'Analyzing entries with backend AI...', percentage: 30 });
                 const response = await fetch('http://localhost:5001/api/process_for_constellation', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -78,13 +85,16 @@ const ConstellationPage = () => {
                 const processedData = await response.json();
                 const vectors = processedData.map((d: any) => d.vector);
 
-                // Run dimensionality reduction (still on-device processing - important!!!)
-                setProgressText('Mapping the constellation...');
-                const umap = new UMAP({ nNeighbors: Math.min(4, entries.length - 1), minDist: 0.1, nComponents: 2 });
+                setProgress({ text: 'Mapping the constellation...', percentage: 60 });
+                const umap = new UMAP({
+                    nNeighbors: Math.min(4, entries.length - 1),
+                    minDist: 0.1,
+                    nComponents: 2,
+                    random: seededRandom()
+                });
                 const coordinates = umap.fit(vectors);
 
-                // Format data 
-                setProgressText('Finalizing visualization...');
+                setProgress({ text: 'Finalizing visualization...', percentage: 95 });
                 const formattedData = processedData.map((data: any, i: number) => ({
                     id: data.id,
                     x: coordinates[i][0],
@@ -97,7 +107,7 @@ const ConstellationPage = () => {
                 setChartData(formattedData);
             } catch (error) {
                 console.error("Failed to generate constellation:", error);
-                setProgressText('An error occurred. Please ensure the backend is running and check the console.');
+                setProgress({ text: 'An error occurred. Please ensure the backend is running and check the console.', percentage: 100 });
             } finally {
                 setIsLoading(false);
             }
@@ -109,17 +119,24 @@ const ConstellationPage = () => {
     if (isLoading) {
         return (
             <div className="text-center">
-                <h1 className="text-3xl font-bold mb-4">Building Your Thought Constellation...</h1>
-                <p className="text-gray-400">{progressText}</p>
+                <h1 className="text-3xl font-bold mb-4 animate-sweep-up" style={{ animationDelay: '100ms' }}>
+                    Building Your Thought Constellation...
+                </h1>
+                <p className="text-gray-400 animate-sweep-up" style={{ animationDelay: '200ms' }}>
+                    {progress.text}
+                </p>
+                <div className="w-full bg-gray-700 rounded-full h-2.5 mt-4 animate-sweep-up" style={{ animationDelay: '300ms' }}>
+                    <div className="bg-purple-600 h-2.5 rounded-full" style={{ width: `${progress.percentage}%` }}></div>
+                </div>
             </div>
         );
     }
 
     return (
         <div>
-            <h1 className="text-3xl font-bold mb-2">Your Thought Constellation</h1>
-            <p className="text-gray-400 mb-6">Each star is a journal entry. Entries with similar meanings are closer together. Hover over a star to see a preview.</p>
-            <div className="flex items-center justify-center gap-6 mb-4 text-sm">
+            <h1 className="text-3xl font-bold mb-2 animate-sweep-up" style={{ animationDelay: '100ms' }}>Your Thought Constellation</h1>
+            <p className="text-gray-400 mb-6 animate-sweep-up" style={{ animationDelay: '200ms' }}>Each star is a journal entry. Entries with similar meanings are closer together. Hover over a star to see a preview.</p>
+            <div className="flex items-center justify-center gap-6 mb-4 text-sm animate-sweep-up" style={{ animationDelay: '300ms' }}>
                 <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full bg-purple-500"></div>
                     <span>Positive / Neutral Entry</span>
@@ -129,28 +146,23 @@ const ConstellationPage = () => {
                     <span>Negative Entry</span>
                 </div>
             </div>
-
             <div style={{ width: '100%', height: '70vh' }}>
                 <ResponsiveContainer>
                     <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                         <XAxis type="number" dataKey="x" tick={false} axisLine={false} />
                         <YAxis type="number" dataKey="y" tick={false} axisLine={false} />
-
                         <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-
                         <Scatter
                             name="Entries"
                             data={chartData}
                             fill="#8884d8"
                             onClick={(data) => router.push(`/entry/${data.id}`)}
-                            // Make the cursor a pointer to show it's clickable
                             style={{ cursor: 'pointer' }}
                         >
                             {chartData.map((entry) => (
                                 <Cell key={`cell-${entry.id}`} fill={entry.sentiment < -0.05 ? '#f97316' : '#8b5cf6'} />
                             ))}
                         </Scatter>
-
                     </ScatterChart>
                 </ResponsiveContainer>
             </div>

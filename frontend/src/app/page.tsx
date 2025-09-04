@@ -119,16 +119,17 @@ const HomePage: React.FC = () => {
 
       {/* --- ENTRY LIST --- */}
       <div className="space-y-4">
-        {entries?.map((entry: IEntry) => (
+        {entries?.map((entry: IEntry, index: number) => (
           // --- UPGRADED ENTRY CARD ---
           // Added a "frosted glass" effect with backdrop-blur, a subtle border, and hover transitions
           <div
             key={entry.id}
-            className="bg-slate-800/50 border border-slate-700 backdrop-blur-sm p-5 rounded-lg shadow-lg transition-all duration-300 hover:border-slate-500 hover:bg-slate-700/50"
+            className="bg-slate-800/50 border border-slate-700 backdrop-blur-sm p-5 rounded-lg shadow-lg transition-all duration-300 hover:border-slate-500 hover:bg-slate-700/50 animate-sweep-up"
+            style={{ animationDelay: `${index * 100}ms` }}
           >
             <p className="text-xs text-slate-400 mb-2">{new Date(entry.date).toLocaleString()}</p>
             {/* Added more comfortable line spacing for the entry content */}
-            <p className="text-slate-200 whitespace-pre-wrap leading-relaxed">{entry.content}</p>
+            <p className="text-slate-200 whitespace-pre-wrap leading-relaxed ">{entry.content}</p>
             <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-700/50">
               <button
                 onClick={() => entry.id && router.push(`/entry/${entry.id}`)}
