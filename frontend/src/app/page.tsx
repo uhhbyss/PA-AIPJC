@@ -126,7 +126,7 @@ const HomePage: React.FC = () => {
             <button id="ai-toggle" onClick={() => setIsCloudAI(!isCloudAI)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isCloudAI ? 'bg-purple-600' : 'bg-gray-600'}`}>
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isCloudAI ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
-            <label htmlFor="ai-toggle" className="text-gray-200">Cloud AI ✨</label>
+            <label htmlFor="ai-toggle" className="text-gray-200">Cloud AI</label>
           </div>
           <button onClick={handleAnalyze} disabled={isLoading} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-md disabled:bg-gray-500 disabled:cursor-not-allowed">
             {isLoading ? 'Analyzing...' : 'Get Insight'}

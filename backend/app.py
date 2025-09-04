@@ -150,6 +150,7 @@ def process_for_constellation():
         processed_data.append({
             "id": entry['id'],
             "content": entry['content'],
+            "date": entry['date'], 
             "vector": embeddings[i],
             "sentiment": sentiments[i]
         })

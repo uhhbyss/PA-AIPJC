@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { db } from '@/lib/db';
 import { UMAP } from 'umap-js';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation'
 
 // Recharts components remain the same
 import {
@@ -15,13 +17,26 @@ interface ChartDataPoint {
     y: number;
     content: string;
     sentiment: number;
+    date: string;
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        const entryDate = new Date(data.date).toLocaleDateString(); // Get the date
+
         return (
-            <div className="p-2 bg-gray-800 border border-gray-600 rounded-md shadow-lg max-w-xs">
-                <p className="text-gray-300 text-sm">{payload[0].payload.content.substring(0, 200)}...</p>
+            <div className="p-3 bg-gray-800 border border-gray-600 rounded-md shadow-lg max-w-xs w-64">
+                <p className="text-xs text-gray-400 font-semibold mb-1">{entryDate}</p>
+                <p className="text-gray-300 text-sm mb-3">
+                    {data.content.substring(0, 150)}...
+                </p>
+                <Link
+                    href={`/entry/${data.id}`}
+                    className="text-center block w-full text-sm text-blue-400 hover:underline"
+                >
+                    View or Edit Entry &rarr;
+                </Link>
             </div>
         );
     }
@@ -29,6 +44,9 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 const ConstellationPage = () => {
+    const router = useRouter();
+
+
     const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [progressText, setProgressText] = useState('Initializing...');
@@ -73,6 +91,7 @@ const ConstellationPage = () => {
                     y: coordinates[i][1],
                     content: data.content,
                     sentiment: data.sentiment,
+                    date: data.date,
                 }));
 
                 setChartData(formattedData);
@@ -98,20 +117,31 @@ const ConstellationPage = () => {
 
     return (
         <div>
-            <h1 className="text-3xl font-bold mb-2">Your Thought Constellation</h1>
-            <p className="text-gray-400 mb-6">Each star is a journal entry. Entries with similar meanings are closer together. Hover over a star to see a preview.</p>
+            {/* ... (h1, p, and legend JSX) ... */}
             <div style={{ width: '100%', height: '70vh' }}>
                 <ResponsiveContainer>
                     <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                         <XAxis type="number" dataKey="x" tick={false} axisLine={false} />
                         <YAxis type="number" dataKey="y" tick={false} axisLine={false} />
+
+                        {/* We still use Tooltip for the hover preview */}
                         <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-                        <Scatter name="Entries" data={chartData} fill="#8884d8">
+
+                        <Scatter
+                            name="Entries"
+                            data={chartData}
+                            fill="#8884d8"
+                            // --- THIS IS THE KEY CHANGE ---
+                            // Add an onClick handler to the entire scatter plot
+                            onClick={(data) => router.push(`/entry/${data.id}`)}
+                            // Make the cursor a pointer to show it's clickable
+                            style={{ cursor: 'pointer' }}
+                        >
                             {chartData.map((entry) => (
-                                // Orange for negative (VADER score < 0), Purple for positive/neutral
                                 <Cell key={`cell-${entry.id}`} fill={entry.sentiment < -0.05 ? '#f97316' : '#8b5cf6'} />
                             ))}
                         </Scatter>
+
                     </ScatterChart>
                 </ResponsiveContainer>
             </div>
