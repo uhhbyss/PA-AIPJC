@@ -21,6 +21,7 @@ const HomePage: React.FC = () => {
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCloudAI, setIsCloudAI] = useState<boolean>(false);
 
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this entry?")) {
@@ -47,7 +48,8 @@ const HomePage: React.FC = () => {
       const response = await fetch('http://localhost:5001/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entries: recentEntries }),
+        // Add the isCloudAI flag to the payload
+        body: JSON.stringify({ entries: recentEntries, useCloudAI: isCloudAI }),
       });
       if (!response.ok) throw new Error("Server response wasn't ok.");
       const data = await response.json();
@@ -69,6 +71,19 @@ const HomePage: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Your Journal</h1>
         <div className="flex gap-4">
+          <div className="flex items-center space-x-2 text-sm">
+            <label htmlFor="ai-toggle" className="text-gray-400">Local AI</label>
+            <button
+              id="ai-toggle"
+              onClick={() => setIsCloudAI(!isCloudAI)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isCloudAI ? 'bg-purple-600' : 'bg-gray-600'}`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isCloudAI ? 'translate-x-6' : 'translate-x-1'}`}
+              />
+            </button>
+            <label htmlFor="ai-toggle" className="text-gray-200">Cloud AI</label>
+          </div>
           <button
             onClick={handleAnalyze}
             disabled={isLoading}
@@ -81,6 +96,8 @@ const HomePage: React.FC = () => {
           </Link>
         </div>
       </div>
+
+
 
       {/* --- NEW: Display Suggestion or Error --- */}
       <div className="mb-6">
