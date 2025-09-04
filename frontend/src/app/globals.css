@@ -20,6 +20,10 @@
   /* Adjust duration and timing function as needed */
 }
 
+
+
+
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
