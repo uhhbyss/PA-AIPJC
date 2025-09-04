@@ -55,7 +55,8 @@ def analyze_entries():
 
     # --- APPLY THE RULES-BASED SYSTEM ---
     for topic, scores in topic_sentiments.items():
-        if len(scores) >= 3 and (sum(scores) / len(scores)) < -0.3:
+        # IMPORTANT -> THRESHOLD DICTATES SENTIMENT SENSITIVITY AND IS CURRENTLY HARDCODED
+        if len(scores) >= 3 and (sum(scores) / len(scores)) < -0.25:
             suggestion_text = (
                 f"I've noticed the topic of '{topic.title()}' has come up a few times recently "
                 f"in a challenging context. Perhaps we could explore that a bit more. "
