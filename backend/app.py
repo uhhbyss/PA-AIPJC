@@ -22,6 +22,12 @@ google_api_key = os.getenv("GOOGLE_API_KEY")
 if google_api_key:
     genai.configure(api_key=google_api_key)
 
+CLOUD_INSTRUCTION_SNIPPETS = {
+    "reframing": "The question should help the user reframe their perspective or see the situation in a new light.",
+    "emotional_exploration": "The question should gently encourage the user to explore the core emotions behind their writing.",
+    "action_oriented": "The question should prompt the user to think about a small, concrete, and manageable next step."
+}
+
 TEMPLATES = {
     "reframing": [
         "I've noticed '{topic}' has appeared a few times. Is there another way to look at this situation?",
@@ -54,10 +60,10 @@ def extract_features(text):
 
 
 # --- Helper to call the Google Gemini LLM ---
-def get_cloud_suggestion(topic, combined_features):
+def get_cloud_suggestion(topic, combined_features, ai_mode='auto'):
     try:
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
-
+        instruction = CLOUD_INSTRUCTION_SNIPPETS.get(ai_mode, "")
         prompt = (
             f"You are an empathetic, insightful journaling companion. You never give clinical advice. "
             f"A user is journaling about a recurring negative topic: '{topic}'.\n\n"
@@ -66,7 +72,8 @@ def get_cloud_suggestion(topic, combined_features):
             f"Based on this, write one gentle, relatively short, open-ended question that encourages deeper reflection. "
             f"The question should be insightful, non-judgmental, and feel like it comes from a wise, caring friend. "
             # f"Your focus should be to guide the user to connect commonalities and themes in their behavior / mindset on their own, with the ultimate goal of resolving these recurring topics"
-            f"Do not be generic. Make it relevant to the provided summary. Only return the question itself."
+            f"{instruction}"
+            f"Do not be generic. Make it relevant to the provided summary. Keep it concise. Only return the question itself."
         )
 
         response = model.generate_content(prompt)
@@ -82,6 +89,7 @@ def analyze_entries():
     data = request.get_json()
     entries = data.get('entries', [])
     use_cloud_ai = data.get('useCloudAI', False)
+    ai_mode = data.get('aiMode', 'auto')
     
     topic_sentiments_scores = defaultdict(list)
     topic_texts = defaultdict(list)
@@ -106,21 +114,22 @@ def analyze_entries():
             if use_cloud_ai and google_api_key:
                 combined_text = " ".join(topic_texts[topic])
                 features = extract_features(combined_text)
-                suggestion_text = get_cloud_suggestion(topic, features["redacted_text"])
+                suggestion_text = get_cloud_suggestion(topic, features["redacted_text"], ai_mode)
                 
                 if not suggestion_text:
                     use_cloud_ai = False
                 else:
                     # return jsonify({"suggestion": {"type": "cloud_prompt_gemini", "text": suggestion_text}})
                     return jsonify({"detectedLoop": {"topic": topic, "suggestionText": suggestion_text, "type": "cloud_prompt_gemini"}})
-
-            # Fallback to Local AI
-            category = random.choice(list(TEMPLATES.keys()))
-            template = random.choice(TEMPLATES[category])
-            suggestion_text = template.format(topic=topic.title())
-            # return jsonify({"suggestion": {"type": f"{category}_local_prompt", "text": suggestion_text}})
-            return jsonify({"detectedLoop": {"topic": topic, "suggestionText": suggestion_text, "type": f"{category}_local_prompt"}})
-
+            else:
+                if ai_mode != 'auto' and ai_mode in TEMPLATES:
+                    category = ai_mode # Use the user's chosen category
+                else:
+                    category = random.choice(list(TEMPLATES.keys())) # Default 'auto' behavior
+                
+                template = random.choice(TEMPLATES[category])
+                suggestion_text = template.format(topic=topic.title())
+                return jsonify({"detectedLoop": {"topic": topic, "suggestionText": suggestion_text, "type": f"{category}_local_prompt"}})
     # return jsonify({"suggestion": None})
     return jsonify({"detectedLoop": None})
 

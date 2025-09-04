@@ -53,7 +53,8 @@ const HomePage: React.FC = () => {
     setCelebration(null);
 
     // --- 1. Check for Resolved Loops ---
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    // const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(Date.now() - 0.001 * 24 * 60 * 60 * 1000);
     const activeLoops = await db.activeLoops.where('status').equals('active').toArray();
 
     for (const loop of activeLoops) {
@@ -149,6 +150,10 @@ const HomePage: React.FC = () => {
       </div>
     </div>
   );
+}
+
+if (typeof window !== 'undefined') {
+  (window as any).db = db;
 }
 
 export default HomePage;
