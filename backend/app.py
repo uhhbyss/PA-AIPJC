@@ -110,15 +110,18 @@ def analyze_entries():
                 if not suggestion_text:
                     use_cloud_ai = False
                 else:
-                    return jsonify({"suggestion": {"type": "cloud_prompt_gemini", "text": suggestion_text}})
+                    # return jsonify({"suggestion": {"type": "cloud_prompt_gemini", "text": suggestion_text}})
+                    return jsonify({"detectedLoop": {"topic": topic, "suggestionText": suggestion_text, "type": "cloud_prompt_gemini"}})
 
             # Fallback to Local AI
             category = random.choice(list(TEMPLATES.keys()))
             template = random.choice(TEMPLATES[category])
             suggestion_text = template.format(topic=topic.title())
-            return jsonify({"suggestion": {"type": f"{category}_local_prompt", "text": suggestion_text}})
+            # return jsonify({"suggestion": {"type": f"{category}_local_prompt", "text": suggestion_text}})
+            return jsonify({"detectedLoop": {"topic": topic, "suggestionText": suggestion_text, "type": f"{category}_local_prompt"}})
 
-    return jsonify({"suggestion": None})
+    # return jsonify({"suggestion": None})
+    return jsonify({"detectedLoop": None})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
