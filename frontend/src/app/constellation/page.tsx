@@ -117,22 +117,31 @@ const ConstellationPage = () => {
 
     return (
         <div>
-            {/* ... (h1, p, and legend JSX) ... */}
+            <h1 className="text-3xl font-bold mb-2">Your Thought Constellation</h1>
+            <p className="text-gray-400 mb-6">Each star is a journal entry. Entries with similar meanings are closer together. Hover over a star to see a preview.</p>
+            <div className="flex items-center justify-center gap-6 mb-4 text-sm">
+                <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-purple-500"></div>
+                    <span>Positive / Neutral Entry</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-orange-500"></div>
+                    <span>Negative Entry</span>
+                </div>
+            </div>
+
             <div style={{ width: '100%', height: '70vh' }}>
                 <ResponsiveContainer>
                     <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                         <XAxis type="number" dataKey="x" tick={false} axisLine={false} />
                         <YAxis type="number" dataKey="y" tick={false} axisLine={false} />
 
-                        {/* We still use Tooltip for the hover preview */}
                         <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
 
                         <Scatter
                             name="Entries"
                             data={chartData}
                             fill="#8884d8"
-                            // --- THIS IS THE KEY CHANGE ---
-                            // Add an onClick handler to the entire scatter plot
                             onClick={(data) => router.push(`/entry/${data.id}`)}
                             // Make the cursor a pointer to show it's clickable
                             style={{ cursor: 'pointer' }}

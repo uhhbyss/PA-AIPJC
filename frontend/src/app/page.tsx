@@ -5,7 +5,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type IEntry } from '@/lib/db';
 import { useState } from 'react';
 import SuggestionCard from '@/components/SuggestionCard';
-import CelebrationCard from '@/components/CelebrationCard'; // Import new component
+import CelebrationCard from '@/components/CelebrationCard';
+import { useRouter } from 'next/navigation'
 
 type Suggestion = {
   text: string;
@@ -16,6 +17,7 @@ type Celebration = {
 };
 
 const HomePage: React.FC = () => {
+  const router = useRouter();
   const entries = useLiveQuery(() => db.entries.orderBy('date').reverse().toArray());
 
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
@@ -146,7 +148,20 @@ const HomePage: React.FC = () => {
           <div key={entry.id} className="bg-gray-800 p-4 rounded-md shadow-lg">
             <p className="text-gray-400 text-sm mb-2">{new Date(entry.date).toLocaleString()}</p>
             <p className="whitespace-pre-wrap">{entry.content}</p>
-            <button onClick={() => entry.id && handleDelete(entry.id)} className="text-red-500 hover:text-red-400 mt-2 text-sm">Delete</button>
+            <div className="flex items-center gap-4 mt-2">
+              <button
+                onClick={() => entry.id && router.push(`/entry/${entry.id}`)}
+                className="text-blue-400 hover:text-blue-300 text-sm font-semibold cursor-pointer"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => entry.id && handleDelete(entry.id)}
+                className="text-red-500 hover:text-red-400 text-sm cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>
