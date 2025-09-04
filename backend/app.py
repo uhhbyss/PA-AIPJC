@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import spacy
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from sentence_transformers import SentenceTransformer
 from collections import defaultdict
 import random
 import os
@@ -122,6 +123,38 @@ def analyze_entries():
 
     # return jsonify({"suggestion": None})
     return jsonify({"detectedLoop": None})
+
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
+# --- Constellation Processing Endpoint ---
+@app.route('/api/process_for_constellation', methods=['POST'])
+def process_for_constellation():
+    data = request.get_json()
+    if not data or 'entries' not in data:
+        return jsonify({"error": "Invalid request body."}), 400
+
+    entries = data['entries']
+    
+    # Extract just the content for processing
+    contents = [entry['content'] for entry in entries]
+
+    # --- 1. Generate Semantic Vector Embeddings ---
+    embeddings = model.encode(contents, convert_to_tensor=False).tolist()
+
+    # --- 2. Generate Sentiment Scores ---
+    sentiments = [analyzer.polarity_scores(content)['compound'] for content in contents]
+
+    # --- 3. Combine and Return the Processed Data ---
+    processed_data = []
+    for i, entry in enumerate(entries):
+        processed_data.append({
+            "id": entry['id'],
+            "content": entry['content'],
+            "vector": embeddings[i],
+            "sentiment": sentiments[i]
+        })
+
+    return jsonify(processed_data)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
