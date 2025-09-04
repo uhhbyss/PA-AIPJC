@@ -3,11 +3,24 @@
 import Link from 'next/link';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type IEntry } from '@/lib/db';
+import { useState } from 'react';
+import SuggestionCard from '@/components/SuggestionCard'; // Import the new component
+
+// Define a type for the suggestion object we expect from the API
+type Suggestion = {
+  type: string;
+  text: string;
+};
 
 const HomePage: React.FC = () => {
   const entries = useLiveQuery(() =>
     db.entries.orderBy('date').reverse().toArray()
   );
+
+  // State variables for the AI feature
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this entry?")) {
@@ -19,15 +32,72 @@ const HomePage: React.FC = () => {
     }
   };
 
+  const handleAnalyze = async () => {
+    setIsLoading(true);
+    setError(null);
+    setSuggestion(null);
+
+    try {
+      const recentEntries = await db.entries.orderBy('date').reverse().limit(10).toArray();
+      if (recentEntries.length < 3) {
+        setError("You need at least 3 entries to get an analysis.");
+        setIsLoading(false);
+        return;
+      }
+      const response = await fetch('http://localhost:5001/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entries: recentEntries }),
+      });
+      if (!response.ok) throw new Error("Server response wasn't ok.");
+      const data = await response.json();
+      if (data.suggestion) {
+        setSuggestion(data.suggestion);
+      } else {
+        setError("No specific patterns were detected in your recent entries. Keep writing!");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("An error occurred. Is the backend server running?");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Your Journal</h1>
-        <Link href="/write" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md">
-          + New Entry
-        </Link>
+        <div className="flex gap-4">
+          <button
+            onClick={handleAnalyze}
+            disabled={isLoading}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-md disabled:bg-gray-500 disabled:cursor-not-allowed"
+          >
+            {isLoading ? 'Analyzing...' : 'Get Insight ✨'}
+          </button>
+          <Link href="/write" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md">
+            + New Entry
+          </Link>
+        </div>
       </div>
 
+      {/* --- NEW: Display Suggestion or Error --- */}
+      <div className="mb-6">
+        {suggestion && (
+          <SuggestionCard
+            suggestionText={suggestion.text}
+            onDismiss={() => setSuggestion(null)}
+          />
+        )}
+        {error && (
+          <div className="bg-yellow-900/50 border border-yellow-500 text-yellow-300 p-3 rounded-md text-center">
+            {error}
+          </div>
+        )}
+      </div>
+
+      {/* --- Existing Entry List --- */}
       <div className="space-y-4">
         {entries && entries.length > 0 ? (
           entries.map((entry: IEntry) => (
@@ -36,8 +106,7 @@ const HomePage: React.FC = () => {
                 {new Date(entry.date).toLocaleString()}
               </p>
               <p className="whitespace-pre-wrap">
-                {entry.content.substring(0, 300)}
-                {entry.content.length > 300 && '...'}
+                {entry.content}
               </p>
               <button
                 onClick={() => entry.id && handleDelete(entry.id)}
@@ -50,11 +119,6 @@ const HomePage: React.FC = () => {
         ) : (
           <div className="text-center py-10 bg-gray-800 rounded-md">
             <p>You have no entries yet.</p>
-            <p>
-              <Link href="/write" className="text-blue-400 hover:underline">
-                Start by writing your first one!
-              </Link>
-            </p>
           </div>
         )}
       </div>
