@@ -41,14 +41,14 @@ const CustomTooltip = ({ active, payload }: any) => {
     return null;
 };
 
-// A simple seeded PRNG to make the UMAP layout deterministic
-const seededRandom = () => {
-    let seed = 12345;
-    return () => {
-        seed = (seed * 9301 + 49297) % 233280;
-        return seed / 233280;
-    };
-};
+// // A simple seeded PRNG to make the UMAP layout deterministic
+// const seededRandom = () => {
+//     let seed = 12345;
+//     return () => {
+//         seed = (seed * 9301 + 49297) % 233280;
+//         return seed / 233280;
+//     };
+// };
 
 const ConstellationPage = () => {
     const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
@@ -90,7 +90,7 @@ const ConstellationPage = () => {
                     nNeighbors: Math.min(4, entries.length - 1),
                     minDist: 0.1,
                     nComponents: 2,
-                    random: seededRandom()
+                    // random: seededRandom()
                 });
                 const coordinates = umap.fit(vectors);
 

@@ -91,7 +91,7 @@ const HomePage: React.FC = () => {
             <button id="ai-toggle" onClick={() => setIsCloudAI(!isCloudAI)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isCloudAI ? 'bg-purple-600' : 'bg-gray-700'}`}>
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isCloudAI ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
-            <label htmlFor="ai-toggle" className="text-white">Cloud ✨</label>
+            <label htmlFor="ai-toggle" className="text-white">Cloud</label>
           </div>
           {/* --- ACTION BUTTONS --- */}
           {/* Added icons and improved styling for the main buttons */}

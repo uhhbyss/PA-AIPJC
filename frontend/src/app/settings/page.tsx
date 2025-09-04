@@ -5,6 +5,13 @@ import { db } from '@/lib/db';
 import { seedEntries } from '@/lib/seedData';
 import { useSettings } from '@/context/SettingsContext';
 
+const modeDescriptions = {
+    auto: "The default experience. Get a random mix of all insight styles.",
+    reframing: "Helps you see a challenging situation from a new perspective.",
+    emotional_exploration: "Gently guides you to explore the core feelings behind your words.",
+    action_oriented: "Focuses on identifying small, manageable next steps."
+};
+
 const AIModeButton = ({ mode, currentMode, setMode, children }: any) => {
     const isActive = mode === currentMode;
     return (
@@ -74,7 +81,14 @@ const SettingsPage: React.FC = () => {
             <div className="bg-gray-800 p-6 rounded-md shadow-lg space-y-4 mb-8">
                 <h2 className="text-2xl font-semibold">Our Commitment to Your Privacy</h2>
                 <p>
-                    All of your journal entries are stored locally on your device using your browser's IndexedDB storage. Your data is never sent to a central server, and we have no access to your personal thoughts.
+                    Innerstellar is built to be a private sanctuary for your thoughts. <br /><br />
+
+                    In Local AI mode, all of your entries and analysis happen exclusively on your device. Your data is never sent to any server. <br />
+                    If you opt-in to Cloud AI mode for more creative insights, only an anonymized, PII-redacted summary of your writing is sent for analysis. <br /><br />
+
+                    Your original journal entries always stay on your device. We do not store any of your data on our servers.
+
+
                 </p>
             </div>
 
@@ -88,6 +102,14 @@ const SettingsPage: React.FC = () => {
                     <AIModeButton mode="reframing" currentMode={aiMode} setMode={setAiMode}>Reframing</AIModeButton>
                     <AIModeButton mode="emotional_exploration" currentMode={aiMode} setMode={setAiMode}>Exploration</AIModeButton>
                     <AIModeButton mode="action_oriented" currentMode={aiMode} setMode={setAiMode}>Action-Oriented</AIModeButton>
+                </div>
+                <div className="pt-2 min-h-[40px]">
+                    <p
+                        key={aiMode} /* This key change triggers the animation */
+                        className="text-sm text-purple-300 animate-fade-in"
+                    >
+                        {modeDescriptions[aiMode]}
+                    </p>
                 </div>
             </div>
 
