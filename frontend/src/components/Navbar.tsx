@@ -6,7 +6,7 @@ const Navbar: React.FC = () => {
         <nav className="bg-gray-800 text-white p-4 shadow-md">
             <div className="container mx-auto flex justify-between items-center">
                 <Link href="/" className="text-xl font-bold hover:text-gray-300">
-                    AI Journal
+                    Innerstellar
                 </Link>
                 <div className="flex gap-4">
                     <Link href="/" className="hover:text-gray-300">

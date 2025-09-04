@@ -10,7 +10,6 @@ export const metadata: Metadata = {
   description: "A private, empathetic journaling app.",
 };
 
-// Note: Typing the props for the layout component
 export default function RootLayout({
   children,
 }: {

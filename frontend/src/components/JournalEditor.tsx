@@ -71,7 +71,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ initialContent = '', onSa
                         disabled={isSaving || isAnalyzing}
                         className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-md disabled:bg-gray-500"
                     >
-                        {isAnalyzing ? 'Analyzing...' : 'Get Insight ✨'}
+                        {isAnalyzing ? 'Analyzing...' : 'Get Insight'}
                     </button>
                 </div>
 
